@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Bot, Check } from "lucide-react"
+import { Bot, Check, ArrowLeft, Home as HomeIcon } from "lucide-react"
 
 const courses = {
   "Python Programming": [
@@ -70,25 +70,29 @@ export default function Home() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    const savedStep = localStorage.getItem("currentStep") as Step | null
-    const savedCourse = localStorage.getItem("selectedCourse")
-    const savedProgress = localStorage.getItem("completedTopics")
+    try {
+      const savedStep = localStorage.getItem("cl_currentStep") as Step | null
+      const savedCourse = localStorage.getItem("cl_selectedCourse")
+      const savedProgress = localStorage.getItem("cl_completedTopics")
 
-    if (savedStep) setStep(savedStep)
-    if (savedCourse) setSelectedCourse(savedCourse)
-    if (savedProgress) setCompletedTopics(JSON.parse(savedProgress))
+      if (savedStep) setStep(savedStep)
+      if (savedCourse) setSelectedCourse(savedCourse)
+      if (savedProgress) setCompletedTopics(JSON.parse(savedProgress))
+    } catch (e) {
+      console.error("Failed to load state", e)
+    }
     setIsLoaded(true)
   }, [])
 
   // Save to localStorage on changes
   useEffect(() => {
     if (!isLoaded) return
-    localStorage.setItem("currentStep", step)
-    localStorage.setItem("completedTopics", JSON.stringify(completedTopics))
+    localStorage.setItem("cl_currentStep", step)
+    localStorage.setItem("cl_completedTopics", JSON.stringify(completedTopics))
     if (selectedCourse) {
-      localStorage.setItem("selectedCourse", selectedCourse)
+      localStorage.setItem("cl_selectedCourse", selectedCourse)
     } else {
-      localStorage.removeItem("selectedCourse")
+      localStorage.removeItem("cl_selectedCourse")
     }
   }, [step, selectedCourse, completedTopics, isLoaded])
 
@@ -99,18 +103,28 @@ export default function Home() {
     setStep("details")
   }
 
-  const handleReset = () => {
+  const goToHome = () => {
+    setStep("home")
     setSelectedCourse(null)
+  }
+
+  const goToSelection = () => {
     setStep("selection")
+    setSelectedCourse(null)
   }
 
   const toggleTopic = (course: string, topic: string) => {
     setCompletedTopics(prev => {
       const courseProgress = prev[course] || []
-      const newProgress = courseProgress.includes(topic)
+      const isAlreadyCompleted = courseProgress.includes(topic)
+      
+      const newProgress = isAlreadyCompleted
         ? courseProgress.filter(t => t !== topic)
         : [...courseProgress, topic]
-      return { ...prev, [course]: newProgress }
+      
+      const updated = { ...prev, [course]: newProgress }
+      // Immediate save feedback could be added here if needed
+      return updated
     })
   }
 
@@ -123,140 +137,172 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-5 font-sans overflow-hidden">
-      {/* Background with study-themed photos and grayscale filter */}
+    <div className="min-h-screen relative flex flex-col items-center justify-center p-5 font-sans overflow-x-hidden bg-white text-black">
+      {/* Subtle Grayscale Background */}
       <div 
-        className="absolute inset-0 z-0 opacity-20 grayscale"
+        className="fixed inset-0 z-0 opacity-[0.03] grayscale pointer-events-none"
         style={{
           backgroundImage: `url('https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=2073&auto=format&fit=crop')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
       />
-      <div className="absolute inset-0 bg-white/60 z-1" />
 
-      <div className="relative z-10 max-w-[700px] w-full bg-white/90 backdrop-blur-sm p-10 rounded-2xl shadow-2xl text-center border border-black/10">
+      <div className="relative z-10 w-full max-w-[800px] flex flex-col items-center">
         
-        {/* STEP 1: HOME PAGE */}
-        {step === "home" && (
-          <div className="animate-in fade-in zoom-in-95 duration-700">
-            <div className="flex justify-center mb-6">
-              <div className="bg-black p-4 rounded-full shadow-lg">
-                <Bot className="w-12 h-12 text-white" />
-              </div>
-            </div>
-            <h1 className="text-[3rem] font-black mb-4 tracking-tighter text-black uppercase">ClarityTrack</h1>
-            <p className="text-[1.1rem] text-black/60 mb-10 font-medium tracking-wide">
-              Track what you understand, not how long you study.
-            </p>
+        {/* Navigation Header (Hidden on Home) */}
+        {step !== "home" && (
+          <div className="w-full flex justify-between items-center mb-8 px-2 animate-in fade-in duration-500">
             <button 
-              onClick={handleStart}
-              className="group relative bg-black text-white px-10 py-4 rounded-full font-bold text-lg transition-all hover:scale-105 active:scale-95 shadow-xl hover:shadow-black/20"
+              onClick={goToHome}
+              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
             >
-              Start Learning
+              <HomeIcon className="w-4 h-4" /> Home
             </button>
+            {step === "details" && (
+              <button 
+                onClick={goToSelection}
+                className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
+              >
+                <ArrowLeft className="w-4 h-4" /> Courses
+              </button>
+            )}
           </div>
         )}
 
-        {/* STEP 2: COURSE SELECTION */}
-        {step === "selection" && (
-          <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <h2 className="text-3xl font-black mb-8 text-black uppercase tracking-tight">Select a Course</h2>
-            <div className="space-y-10">
-              {Object.entries(levels).map(([level, levelCourses]) => (
-                <div key={level} className="text-left">
-                  <h3 className="text-xs font-black uppercase tracking-[0.3em] text-black/40 mb-4 ml-1">
-                    {level} Level
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {levelCourses.map((course) => (
-                      <button
-                        key={course}
-                        onClick={() => handleSelectCourse(course)}
-                        className="group relative bg-white border border-black/10 p-5 rounded-xl hover:border-black transition-all duration-300 text-left shadow-sm hover:shadow-md"
-                      >
-                        <div className="font-bold text-lg text-black mb-1">{course}</div>
-                        <div className="flex items-center justify-between">
-                          <div className="text-[10px] font-bold text-black/40 uppercase tracking-widest">
-                            {getProgress(course)}% Complete
+        <div className="w-full bg-white border border-black p-8 sm:p-12 rounded-3xl shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] text-center">
+          
+          {/* STEP 1: HOME PAGE */}
+          {step === "home" && (
+            <div className="animate-in fade-in zoom-in-95 duration-700">
+              <div className="flex justify-center mb-8">
+                <div className="bg-black p-6 rounded-full shadow-[8px_8px_0px_0px_rgba(0,0,0,0.2)]">
+                  <Bot className="w-16 h-16 text-white" />
+                </div>
+              </div>
+              <h1 className="text-[4rem] sm:text-[5rem] font-black mb-2 tracking-tighter uppercase leading-[0.9]">
+                Clarity<br/>Track
+              </h1>
+              <div className="h-2 w-24 bg-black mx-auto mb-8" />
+              <p className="text-xl font-medium mb-12 opacity-60">
+                Master the curriculum. Track your progress.<br/>Simple. Focused. Monochrome.
+              </p>
+              <button 
+                onClick={handleStart}
+                className="bg-black text-white px-12 py-5 rounded-full font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-[10px_10px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,0.3)]"
+              >
+                GET STARTED
+              </button>
+            </div>
+          )}
+
+          {/* STEP 2: COURSE SELECTION */}
+          {step === "selection" && (
+            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 w-full">
+              <h2 className="text-4xl font-black mb-12 uppercase tracking-tighter italic">Select Your Path</h2>
+              
+              <div className="grid gap-12 text-left">
+                {Object.entries(levels).map(([level, levelCourses]) => (
+                  <div key={level}>
+                    <div className="flex items-center gap-4 mb-6">
+                      <h3 className="text-sm font-black uppercase tracking-[0.4em] opacity-30 whitespace-nowrap">
+                        {level} Level
+                      </h3>
+                      <div className="h-px bg-black/10 w-full" />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {levelCourses.map((course) => (
+                        <button
+                          key={course}
+                          onClick={() => handleSelectCourse(course)}
+                          className="group relative bg-white border-2 border-black p-6 rounded-2xl hover:bg-black hover:text-white transition-all duration-300 text-left shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
+                        >
+                          <div className="font-black text-xl mb-4 uppercase leading-tight">{course}</div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest opacity-50 group-hover:opacity-100">
+                              <span>Progress</span>
+                              <span>{getProgress(course)}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-black/5 group-hover:bg-white/20 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-black group-hover:bg-white transition-all duration-700"
+                                style={{ width: `${getProgress(course)}%` }}
+                              />
+                            </div>
                           </div>
-                          <div className="h-1 flex-1 mx-3 bg-black/5 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-black transition-all duration-500"
-                              style={{ width: `${getProgress(course)}%` }}
-                            />
-                          </div>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: COURSE DETAILS */}
+          {step === "details" && selectedCourse && (
+            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+              <div className="mb-12">
+                <h2 className="text-4xl sm:text-5xl font-black mb-6 uppercase tracking-tighter italic leading-none">
+                  {selectedCourse}
+                </h2>
+                
+                {/* Large Progress Indicator */}
+                <div className="max-w-[400px] mx-auto">
+                  <div className="flex justify-between items-end mb-3">
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30">Mastery Level</span>
+                    <span className="text-3xl font-black">{getProgress(selectedCourse)}%</span>
+                  </div>
+                  <div className="h-4 w-full bg-black/5 rounded-full overflow-hidden border-2 border-black p-0.5">
+                    <div 
+                      className="h-full bg-black rounded-full transition-all duration-1000 cubic-bezier(0.65, 0, 0.35, 1)"
+                      style={{ width: `${getProgress(selectedCourse)}%` }}
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
 
-        {/* STEP 3: COURSE DETAILS */}
-        {step === "details" && selectedCourse && (
-          <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="mb-8">
-              <h2 className="text-3xl font-black mb-3 text-black uppercase tracking-tight leading-tight">
-                {selectedCourse}
-              </h2>
-              
-              {/* Progress Bar */}
-              <div className="max-w-[300px] mx-auto mb-6">
-                <div className="flex justify-between items-end mb-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-black/40">Overall Progress</span>
-                  <span className="text-xl font-black text-black">{getProgress(selectedCourse)}%</span>
-                </div>
-                <div className="h-3 w-full bg-black/5 rounded-full overflow-hidden border border-black/5 p-[2px]">
-                  <div 
-                    className="h-full bg-black rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${getProgress(selectedCourse)}%` }}
-                  />
+              <div className="text-left space-y-3">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 mb-6 ml-1">
+                  Topic Checklist
+                </h3>
+                <div className="grid gap-3">
+                  {(courses[selectedCourse as keyof typeof courses] || []).map((topic, i) => {
+                    const isCompleted = completedTopics[selectedCourse]?.includes(topic)
+                    return (
+                      <button 
+                        key={i} 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toggleTopic(selectedCourse, topic);
+                        }}
+                        className={`group w-full flex items-center p-5 rounded-2xl border-2 transition-all duration-200 active:scale-[0.98] ${
+                          isCompleted 
+                            ? "bg-black border-black text-white shadow-none" 
+                            : "bg-white border-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+                        }`}
+                      >
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-lg border-2 flex items-center justify-center mr-5 transition-all ${
+                          isCompleted ? "bg-white border-white" : "border-black group-hover:bg-black/5"
+                        }`}>
+                          {isCompleted && <Check className="w-5 h-5 text-black stroke-[4px]" />}
+                        </div>
+                        <span className="font-black text-lg uppercase tracking-tight">{topic}</span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             </div>
+          )}
 
-            <div className="text-left mb-8">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-black/40 mb-4 ml-1">
-                Curriculum
-              </h3>
-              <ul className="space-y-2">
-                {(courses[selectedCourse as keyof typeof courses] || []).map((topic, i) => {
-                  const isCompleted = completedTopics[selectedCourse]?.includes(topic)
-                  return (
-                    <li 
-                      key={i} 
-                      onClick={() => toggleTopic(selectedCourse, topic)}
-                      className={`group cursor-pointer flex items-center p-4 rounded-xl border transition-all duration-300 ${
-                        isCompleted 
-                          ? "bg-black border-black text-white" 
-                          : "bg-white border-black/10 text-black hover:border-black"
-                      }`}
-                    >
-                      <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 transition-colors ${
-                        isCompleted ? "bg-white border-white" : "border-black/10 group-hover:border-black"
-                      }`}>
-                        {isCompleted && <Check className="w-4 h-4 text-black" />}
-                      </div>
-                      <span className="font-bold">{topic}</span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-            
-            <button 
-              onClick={handleReset}
-              className="text-black/40 font-bold uppercase tracking-widest text-xs hover:text-black transition-colors border-b border-transparent hover:border-black pb-1"
-            >
-              Choose a different course
-            </button>
-          </div>
-        )}
-
+        </div>
+        
+        {/* Footer info */}
+        <div className="mt-12 text-[10px] font-black uppercase tracking-[0.5em] opacity-20">
+          ClarityTrack © 2024 • Strictly Monochrome
+        </div>
       </div>
     </div>
   )
