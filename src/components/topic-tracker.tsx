@@ -142,7 +142,9 @@ export function TopicTracker() {
 
   React.useEffect(() => {
     if (mounted) {
-      localStorage.setItem("clarity-track-data", JSON.stringify(courses))
+      // Exclude icon property as it contains React nodes (circular structures)
+      const dataToSave = courses.map(({ icon, ...rest }) => rest)
+      localStorage.setItem("clarity-track-data", JSON.stringify(dataToSave))
     }
   }, [courses, mounted])
 
