@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClarityTrack</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -0.025em;
+        }
+
+        p.tagline {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        button.primary-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button.primary-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Course Selection Styles */
+        .course-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .course-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            font-weight: 500;
+        }
+
+        .course-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* Course Details Styles */
+        .details-header {
+            margin-bottom: 24px;
+        }
+
+        .topic-list {
+            text-align: left;
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .topic-item {
+            padding: 12px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            margin-bottom: 8px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+        }
+
+        .topic-item::before {
+            content: "✓";
+            color: var(--primary);
+            margin-right: 12px;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            margin-top: 24px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- STEP 1: HOME PAGE -->
+        <div id="home-screen" class="screen active">
+            <h1>ClarityTrack</h1>
+            <p class="tagline">Track what you understand, not how long you study</p>
+            <button id="start-btn" class="primary-btn">Start Learning</button>
+        </div>
+
+        <!-- STEP 2: COURSE SELECTION -->
+        <div id="selection-screen" class="screen">
+            <h2 style="margin-bottom: 24px;">Select a Course</h2>
+            <div id="course-grid" class="course-grid">
+                <!-- Courses will be injected here -->
+            </div>
+        </div>
+
+        <!-- STEP 3: COURSE DETAILS -->
+        <div id="details-screen" class="screen">
+            <div class="details-header">
+                <h2 id="selected-course-title">What you will learn</h2>
+            </div>
+            <ul id="topic-list" class="topic-list">
+                <!-- Topics will be injected here -->
+            </ul>
+            <button id="reset-btn" class="back-btn">Choose a different course</button>
+        </div>
+    </div>
+
+    <script>
+        const courses = {
+            "Python Programming": [
+                "Variables & Data Types",
+                "Loops & Conditions",
+                "Lists & Dictionaries",
+                "Functions",
+                "File Handling",
+                "Practice Problems"
+            ],
+            "Data Analysis": [
+                "Data Cleaning",
+                "Visualization",
+                "Statistics",
+                "NumPy",
+                "Pandas",
+                "Matplotlib"
+            ],
+            "Web Development": [
+                "HTML5",
+                "CSS3",
+                "JavaScript",
+                "Responsive Design",
+                "Web APIs",
+                "Deployment"
+            ],
+            "SQL & Databases": [
+                "SELECT Statements",
+                "Joins",
+                "Aggregations",
+                "Schema Design",
+                "Normalization",
+                "Indexing"
+            ],
+            "Programming Fundamentals": [
+                "Algorithms",
+                "Logic",
+                "Data Types",
+                "Control Structures",
+                "Debugging",
+                "Documentation"
+            ],
+            "Data Structures & Algorithms": [
+                "Arrays",
+                "Linked Lists",
+                "Stacks/Queues",
+                "Trees",
+                "Sorting",
+                "Recursion"
+            ]
+        };
+
+        const screens = {
+            home: document.getElementById('home-screen'),
+            selection: document.getElementById('selection-screen'),
+            details: document.getElementById('details-screen')
+        };
+
+        function showScreen(screenId) {
+            Object.values(screens).forEach(screen => screen.classList.remove('active'));
+            screens[screenId].classList.add('active');
+            localStorage.setItem('currentStep', screenId);
+        }
+
+        // Initialize Course Grid
+        const courseGrid = document.getElementById('course-grid');
+        Object.keys(courses).forEach(courseName => {
+            const card = document.createElement('div');
+            card.className = 'course-card';
+            card.textContent = courseName;
+            card.onclick = () => selectCourse(courseName);
+            courseGrid.appendChild(card);
+        });
+
+        function selectCourse(courseName) {
+            localStorage.setItem('selectedCourse', courseName);
+            renderDetails(courseName);
+            showScreen('details');
+        }
+
+        function renderDetails(courseName) {
+            document.getElementById('selected-course-title').textContent = `What you will learn in ${courseName}`;
+            const topicList = document.getElementById('topic-list');
+            topicList.innerHTML = '';
+            
+            const topics = courses[courseName] || [];
+            topics.forEach(topic => {
+                const li = document.createElement('li');
+                li.className = 'topic-item';
+                li.textContent = topic;
+                topicList.appendChild(li);
+            });
+        }
+
+        // Event Listeners
+        document.getElementById('start-btn').onclick = () => showScreen('selection');
+        document.getElementById('reset-btn').onclick = () => {
+            localStorage.removeItem('selectedCourse');
+            showScreen('selection');
+        };
+
+        // On Load: Resume State
+        window.onload = () => {
+            const savedStep = localStorage.getItem('currentStep');
+            const savedCourse = localStorage.getItem('selectedCourse');
+
+            if (savedStep === 'details' && savedCourse) {
+                renderDetails(savedCourse);
+                showScreen('details');
+            } else if (savedStep === 'selection') {
+                showScreen('selection');
+            } else {
+                showScreen('home');
+            }
+        };
+    </script>
+</body>
+</html>
