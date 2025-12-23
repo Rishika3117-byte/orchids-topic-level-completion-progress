@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Bot, Check } from "lucide-react"
 
 const courses = {
   "Python Programming": [
