@@ -97,19 +97,35 @@ export default function Home() {
   if (!isLoaded) return null
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-[#1e293b] flex items-center justify-center p-5 font-sans">
-      <div className="max-w-[600px] w-full bg-white p-10 rounded-lg shadow-sm text-center border border-[#e2e8f0]">
+    <div className="min-h-screen relative flex items-center justify-center p-5 font-sans overflow-hidden">
+      {/* Background with study-themed photos and grayscale filter */}
+      <div 
+        className="absolute inset-0 z-0 opacity-20 grayscale"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=2073&auto=format&fit=crop')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+      <div className="absolute inset-0 bg-white/60 z-1" />
+
+      <div className="relative z-10 max-w-[600px] w-full bg-white/90 backdrop-blur-sm p-10 rounded-2xl shadow-2xl text-center border border-black/10">
         
         {/* STEP 1: HOME PAGE */}
         {step === "home" && (
-          <div className="animate-in fade-in duration-500">
-            <h1 className="text-[2.5rem] font-extrabold mb-4 tracking-tight">ClarityTrack</h1>
-            <p className="text-[1.25rem] text-[#64748b] mb-8">
-              Track what you understand, not how long you study
+          <div className="animate-in fade-in zoom-in-95 duration-700">
+            <div className="flex justify-center mb-6">
+              <div className="bg-black p-4 rounded-full shadow-lg">
+                <Bot className="w-12 h-12 text-white" />
+              </div>
+            </div>
+            <h1 className="text-[3rem] font-black mb-4 tracking-tighter text-black uppercase">ClarityTrack</h1>
+            <p className="text-[1.1rem] text-black/60 mb-10 font-medium tracking-wide">
+              Track what you understand, not how long you study.
             </p>
             <button 
               onClick={handleStart}
-              className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-6 py-3 rounded-md font-semibold transition-colors"
+              className="group relative bg-black text-white px-10 py-4 rounded-full font-bold text-lg transition-all hover:scale-105 active:scale-95 shadow-xl hover:shadow-black/20"
             >
               Start Learning
             </button>
@@ -118,14 +134,14 @@ export default function Home() {
 
         {/* STEP 2: COURSE SELECTION */}
         {step === "selection" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h2 className="text-2xl font-bold mb-6">Select a Course</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <h2 className="text-3xl font-black mb-8 text-black uppercase tracking-tight">Select a Course</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {Object.keys(courses).map((course) => (
                 <button
                   key={course}
                   onClick={() => handleSelectCourse(course)}
-                  className="bg-[#f8fafc] border border-[#e2e8f0] p-5 rounded-lg hover:border-[#2563eb] hover:-translate-y-0.5 transition-all font-medium text-center"
+                  className="bg-white border-2 border-black/5 p-6 rounded-xl hover:border-black hover:bg-black hover:text-white transition-all duration-300 font-bold text-lg shadow-sm hover:shadow-xl hover:-translate-y-1"
                 >
                   {course}
                 </button>
@@ -136,21 +152,26 @@ export default function Home() {
 
         {/* STEP 3: COURSE DETAILS */}
         {step === "details" && selectedCourse && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-2">What you will learn in {selectedCourse}</h2>
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="mb-8">
+              <h2 className="text-3xl font-black mb-3 text-black uppercase tracking-tight leading-tight">
+                {selectedCourse}
+              </h2>
+              <div className="h-1 w-20 bg-black mx-auto rounded-full" />
             </div>
-            <ul className="text-left space-y-2 mb-8">
+            <ul className="text-left space-y-3 mb-10">
               {(courses[selectedCourse as keyof typeof courses] || []).map((topic, i) => (
-                <li key={i} className="flex items-center p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded-md">
-                  <span className="text-[#2563eb] font-bold mr-3">✓</span>
-                  {topic}
+                <li key={i} className="flex items-center p-4 bg-black/5 border border-black/5 rounded-xl transition-all hover:bg-black/10">
+                  <div className="bg-black rounded-full p-1 mr-4">
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="font-bold text-black/80">{topic}</span>
                 </li>
               ))}
             </ul>
             <button 
               onClick={handleReset}
-              className="text-[#64748b] underline text-sm hover:text-[#1e293b]"
+              className="text-black/40 font-bold uppercase tracking-widest text-xs hover:text-black transition-colors border-b border-transparent hover:border-black pb-1"
             >
               Choose a different course
             </button>
